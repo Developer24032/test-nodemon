@@ -1,12 +1,12 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose')
 
-const connectDB = (url: string) => {
+export function connectDB(url: string){
   return mongoose.connect(url, {
     useNewUrlParser: true,
-    useUnifiedTopology: true,
     useCreateIndex: true,
     useFindAndModify: false,
+    useUnifiedTopology: true,
   });
-};
+}
 
 export default connectDB;

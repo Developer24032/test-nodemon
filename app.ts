@@ -1,56 +1,41 @@
-import 'express-async-errors';
-import express, { Application } from 'express';
-import helmet from 'helmet';
-import cors from 'cors';
-import rateLimit from 'express-rate-limit';
-import connectDB from './db/connect';
+require('dotenv').config();
+
+const express = require('express');
+const app = express();
+import {Request, Response} from 'express';
+
+const connectDB = require('./db/connect');
 import productsRouter from './routes/products';
+
 import notFoundMiddleware from './middleware/not-found';
-import errorHandlerMiddleware from './middleware/error-handler';
-import logger from './utils/logger';
-import { StatusCodes } from 'http-status-codes';
-import config from './config';
+import errorMiddleware from './middleware/error-handler';
 
-const app: Application = express();
-
-// Security middleware
-app.set('trust proxy', 1);
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-  })
-);
-app.use(helmet());
-app.use(cors());
+// middleware
 app.use(express.json());
 
-// Routes
-app.get('/', (req, res) => {
-  res
-    .status(StatusCodes.OK)
-    .send('<h1>Store API</h1><a href="/api/v1/products">products route</a>');
+// routes
+
+app.get('/', (req: Request, res: Response) => {
+  res.send('<h1>Store API</h1><a href="/api/v1/products">products route</a>');
 });
 
 app.use('/api/v1/products', productsRouter);
 
-// Error handling
+// products route
+
 app.use(notFoundMiddleware);
-app.use(errorHandlerMiddleware);
+app.use(errorMiddleware);
+
+const port = process.env.PORT || 3000;
 
 const start = async () => {
   try {
-    await connectDB(config.mongoURI);
-    app.listen(config.port, () => {
-      logger.info(`Server is listening on port ${config.port}...`);
-    });
+    // connectDB
+    await connectDB(process.env.MONGO_URI);
+    app.listen(port, () => console.log(`Server is listening port ${port}...`));
   } catch (error) {
-    logger.error(error);
-    process.exit(1);
+    console.log(error);
   }
 };
 
 start();
-export default app;

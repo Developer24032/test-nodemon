@@ -1,25 +1,38 @@
-import { Request, Response } from 'express';
-import Product from '../models/product';
-import { StatusCodes } from 'http-status-codes';
-import { QueryParams } from '../interfaces/Product';
+import { Request, Response } from "express";
+const Product = require('../models/product');
+
+interface ProductQuery {
+    featured?: boolean;
+    company?: string;
+    name?: { $regex: string; $options: string };
+    price?: { [key: string]: number };
+    rating?: { [key: string]: number };
+}
+
+interface ProductQueryParams {
+    featured?: string;
+    company?: string;
+    name?: string;
+    sort?: string;
+    fields?: string;
+    numericFilters?: string;
+    page?: string;
+    limit?: string;
+}
 
 export const getAllProductsStatic = async (req: Request, res: Response) => {
   const products = await Product.find({ price: { $gt: 30 } })
     .sort('price')
     .select('name price');
 
-  res.status(StatusCodes.OK).json({ products, nbHits: products.length });
+  res.status(200).json({ products, nbHits: products.length });
 };
-
-export const getAllProducts = async (
-  req: Request<{}, {}, {}, QueryParams>,
-  res: Response
-) => {
-  const { featured, company, name, sort, fields, numericFilters, page, limit } = req.query;
-  const queryObject: Record<string, any> = {};
+export const getAllProducts = async (req: Request<{}, {}, {}, ProductQueryParams>, res: Response) => {
+  const { featured, company, name, sort, fields, numericFilters } = req.query;
+  const queryObject: ProductQuery = {};
 
   if (featured) {
-    queryObject.featured = featured === 'true';
+    queryObject.featured = featured === 'true' ? true : false;
   }
   if (company) {
     queryObject.company = company;
@@ -27,9 +40,8 @@ export const getAllProducts = async (
   if (name) {
     queryObject.name = { $regex: name, $options: 'i' };
   }
-
   if (numericFilters) {
-    const operatorMap: Record<string, string> = {
+    const operatorMap = {
       '>': '$gt',
       '>=': '$gte',
       '=': '$eq',
@@ -37,23 +49,21 @@ export const getAllProducts = async (
       '<=': '$lte',
     };
     const regEx = /\b(<|>|>=|=|<|<=)\b/g;
-    const filters = numericFilters.replace(
+    let filters = numericFilters.replace(
       regEx,
-      (match) => `-${operatorMap[match]}-`
+      (match) => `-${(operatorMap as any)[match]}-`
     );
     const options = ['price', 'rating'];
-    
     filters.split(',').forEach((item) => {
       const [field, operator, value] = item.split('-');
       if (options.includes(field)) {
-        queryObject[field] = { [operator]: Number(value) };
+        (queryObject as any)[field] = { [operator]: Number(value) };
       }
     });
   }
 
   let result = Product.find(queryObject);
-
-  // Sorting
+  // sort
   if (sort) {
     const sortList = sort.split(',').join(' ');
     result = result.sort(sortList);
@@ -61,27 +71,23 @@ export const getAllProducts = async (
     result = result.sort('createdAt');
   }
 
-  // Field selection
   if (fields) {
     const fieldsList = fields.split(',').join(' ');
     result = result.select(fieldsList);
   }
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
 
-  // Pagination
-  const pageNumber = Number(page) || 1;
-  const limitNumber = Number(limit) || 10;
-  const skip = (pageNumber - 1) * limitNumber;
-
-  result = result.skip(skip).limit(limitNumber);
+  result = result.skip(skip).limit(limit);
+  // 23
+  // 4 7 7 7 2
 
   const products = await result;
-  const totalProducts = await Product.countDocuments(queryObject);
+  res.status(200).json({ products, nbHits: products.length });
+};
 
-  res.status(StatusCodes.OK).json({
-    products,
-    nbHits: products.length,
-    total: totalProducts,
-    page: pageNumber,
-    pages: Math.ceil(totalProducts / limitNumber),
-  });
+export default {
+  getAllProducts,
+  getAllProductsStatic,
 };
