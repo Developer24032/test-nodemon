@@ -8,11 +8,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllProducts = exports.getAllProductsStatic = void 0;
-const Product = require('../models/product');
+exports.getAllProductsStatic = exports.getAllProducts = void 0;
+const product_1 = __importDefault(require("../models/product"));
+const mongoose = require('mongoose');
 const getAllProductsStatic = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const products = yield Product.find({ price: { $gt: 30 } })
+    const products = yield product_1.default.find({ price: { $gt: 30 } })
         .sort('price')
         .select('name price');
     res.status(200).json({ products, nbHits: products.length });
@@ -48,7 +52,7 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
             }
         });
     }
-    let result = Product.find(queryObject);
+    let result = product_1.default.find(queryObject);
     // sort
     if (sort) {
         const sortList = sort.split(',').join(' ');
@@ -71,7 +75,3 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
     res.status(200).json({ products, nbHits: products.length });
 });
 exports.getAllProducts = getAllProducts;
-exports.default = {
-    getAllProducts: exports.getAllProducts,
-    getAllProductsStatic: exports.getAllProductsStatic,
-};

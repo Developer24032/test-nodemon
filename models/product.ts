@@ -1,6 +1,15 @@
-import { Schema, model } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-const productSchema = new Schema({
+interface IProduct extends Document {
+  name: string;
+  price: number;
+  featured?: boolean;
+  rating?: number;
+  createdAt?: Date;
+  company?: string;
+}
+
+const productSchema: Schema<IProduct> = new Schema({
   name: {
     type: String,
     required: [true, 'product name must be provided'],
@@ -15,7 +24,7 @@ const productSchema = new Schema({
   },
   rating: {
     type: Number,
-    default: 4.5,
+    default: 0.0,
   },
   createdAt: {
     type: Date,
@@ -28,9 +37,6 @@ const productSchema = new Schema({
       message: '{VALUE} is not supported',
     },
   },
-},
-{
-  timestamps: true,
 });
 
-export default model('Product', productSchema);
+export default mongoose.model<IProduct>('Product', productSchema);

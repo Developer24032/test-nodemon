@@ -12,15 +12,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-require('dotenv').config();
-const express = require('express');
-const app = express();
-const connectDB = require('./db/connect');
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+const express_1 = __importDefault(require("express"));
+const app = (0, express_1.default)();
+const connect_1 = __importDefault(require("./db/connect"));
 const products_1 = __importDefault(require("./routes/products"));
 const not_found_1 = __importDefault(require("./middleware/not-found"));
-const error_handler_1 = __importDefault(require("./middleware/error-handler"));
+const errorHandlerMiddleware = require("./middleware/error-handler");
 // middleware
-app.use(express.json());
+app.use(express_1.default.json());
 // routes
 app.get('/', (req, res) => {
     res.send('<h1>Store API</h1><a href="/api/v1/products">products route</a>');
@@ -28,12 +29,12 @@ app.get('/', (req, res) => {
 app.use('/api/v1/products', products_1.default);
 // products route
 app.use(not_found_1.default);
-app.use(error_handler_1.default);
+app.use(errorHandlerMiddleware);
 const port = process.env.PORT || 3000;
 const start = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // connectDB
-        yield connectDB(process.env.MONGO_URI);
+        yield (0, connect_1.default)(process.env.MONGO_URI);
         app.listen(port, () => console.log(`Server is listening port ${port}...`));
     }
     catch (error) {

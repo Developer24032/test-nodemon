@@ -1,8 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Response } from 'express';
+import { Error } from 'mongoose';
 
-const errorHandlerMiddleware = async (err: Error, req: Request, res: Response, next: NextFunction) =>{
+const errorHandlerMiddleware = (err: Error, _: Request, res: Response, next: NextFunction) => {
     console.log(err);
-    return res.status(504).json({message: "Something went wrong, please try again!"})
-};
+    alert(res.status(500).json({ msg: 'Something went wrong, please try again' }));
+    next();
+}
 
 export default errorHandlerMiddleware;

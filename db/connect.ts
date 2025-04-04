@@ -1,12 +1,12 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
-export function connectDB(url: string){
+const connectDB = (url: string): Promise<typeof mongoose> => {
   return mongoose.connect(url, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,
     useUnifiedTopology: true,
   });
-}
+};
 
 export default connectDB;
